@@ -265,7 +265,7 @@ define([
 					} else {
 						if (this._hasactivated == false) {
 							//TODO in what case does the code fall in here?
-							this.rebuildOptions();
+							//this.rebuildOptions();
 							this.changeGeography(this.geography, false);
 							this.stateRestore = false;
 						}
@@ -409,7 +409,7 @@ define([
 				 * Args:
 				 * 		
 				*/
-        		rebuildOptions: function() {
+        rebuildOptions: function() {
 					console.debug('habitat_explorer; main.js; rebuildOptions()');
 					domConstruct.empty(this.ddNode);
 					$('<h3 style="margin-top: 0px;">New York Streams</h3>').appendTo($(this.ddNode));	
@@ -462,7 +462,7 @@ define([
 				 * Args:
 				 * 		
 				*/
-				zoomToAppExtent: function(){
+				zoomToAppExtent: function() {
 					//!! new internal method for setting extent to framework extent
 					//get the app's initial extent and use for the extent
 					//console.debug('this.app.regionConfig', this.app.regionConfig.initialExtent);
@@ -999,6 +999,17 @@ define([
 						this.sliderpane.titleText = geography.combined.name;//LM hanging on a new sliderpane property for easy access to the tab title name
 						this.tabpan.addChild(this.sliderpane);						
 					}
+					if (this.isVector == true)  {
+						this.currentLayer = new ArcGISDynamicMapServiceLayer(geography.url);
+					} else {
+						params = new ImageServiceParameters();
+						params.interpolation = ImageServiceParameters.INTERPOLATION_NEARESTNEIGHBOR;
+						this.currentLayer = ArcGISImageServiceLayer(geography.url, {
+						  imageServiceParameters: params,
+						  opacity: 1
+						});
+					}
+
 					//below is the only use of dojo/aspect in this file. Should this be dojo/on?
 					aspect.after(this.tabpan, "selectChild", lang.hitch(this,function (e, o) {
 						//called after selecting a new tab in the tab control
@@ -1032,7 +1043,7 @@ define([
 						if (selindex == geography.tabs.length) {
 							//'Recommendations' tab
 							a = lang.hitch(this,function(){this.doCombined()})
-							a();
+							setTimeout(a, 500);
 						} else {
 							//all other tabs
 							a = lang.hitch(this,function(){this.updateService()})
@@ -1042,16 +1053,6 @@ define([
 					}));
 					this.tabpan.startup();
 
-					if (this.isVector == true)  {
-						this.currentLayer = new ArcGISDynamicMapServiceLayer(geography.url);
-					} else {
-						params = new ImageServiceParameters();
-						params.interpolation = ImageServiceParameters.INTERPOLATION_NEARESTNEIGHBOR;
-						this.currentLayer = ArcGISImageServiceLayer(geography.url, {
-						  imageServiceParameters: params,
-						  opacity: 1
-						});
-					}
 					dojo.connect(this.currentLayer, "onLoad", lang.hitch(this,function(e){
 						this.updateService(zoomto);
 					}));
@@ -1298,8 +1299,6 @@ define([
 						rf1h3.outputPixelType = "u16";	
 						this.crasta = rf1h3
 					}
-					console.log("rf1h3", rf1h3);
-					console.log(cformula);
 					return cformula
 				},
 				/** 
