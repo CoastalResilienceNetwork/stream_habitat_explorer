@@ -159,7 +159,7 @@ define([
 			//See Wiki for info on initial settings: https://github.com/CoastalResilienceNetwork/GeositeFramework/wiki/Plugin-Settings
 			return declare(PluginBase, {
 				//Plugin Settings
-				toolbarName: _config.name, //toolbarName is used as the title in the Identify Window
+				toolbarName: "Streams Explorer", //toolbarName is used as the title in the Identify Window
 				toolbarType: "sidebar",
 				fullName: _hoverText,
 				showServiceLayersInLegend: true,
