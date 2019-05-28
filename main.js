@@ -1719,6 +1719,7 @@ define([
 						idTask = new esri.tasks.ImageServiceIdentifyTask(this.geography.url);
 						identifyParams = new ImageServiceIdentifyParameters();
 						identifyParams.returnGeometry = false;
+						identifyParams.tolerance = 6;
 						identifyParams.geometry = point;
 						//identifyParams.renderingRule = this.renderingRule;					
 						idTask.execute(identifyParams, lang.hitch(this,function(identifyResults) {
@@ -1757,7 +1758,7 @@ define([
 											
 										}));
 										array.forEach(identifyValues, lang.hitch(this,function(idval, j){
-											combinedFormulas = combinedFormulas.replace("B"+(j+1), idval);
+											combinedFormulas = combinedFormulas.replace("B"+(j+1)+")", idval + ")");
 											var ci = "B" + (j+1);
 											array.forEach(this.sliders, lang.hitch(this,function(slid, i){
 												outvaluetext = slid.value;
