@@ -592,7 +592,11 @@ define([
 				changeGeography: function(geography, zoomto) {
 					console.debug('habitat_explorer; main.js; changeGeography()');
 					//ga = google analytics, set in index.cshtml view, globally available
-					ga('send', 'event', this.toolbarName, 'Change Dropdown: ' + geography.name);
+					try{
+						ga('send', 'event', this.toolbarName, 'Change Dropdown: ' + geography.name);
+					} catch(err) {
+						console.error("ga not available", err);
+					}
 					//geography.dataset only applies to streams. Not a very good check for vector vs raster. Could just have a property isVector in config and set that to true/false.
 					if (geography.dataset == undefined) {
 						this.isVector = false;
