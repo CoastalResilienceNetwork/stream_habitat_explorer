@@ -159,7 +159,7 @@ define([
 			//See Wiki for info on initial settings: https://github.com/CoastalResilienceNetwork/GeositeFramework/wiki/Plugin-Settings
 			return declare(PluginBase, {
 				//Plugin Settings
-				toolbarName: "Streams Explorer", //toolbarName is used as the title in the Identify Window
+				toolbarName: "Streams Explorer",//_config.name, //toolbarName is used as the title in the Identify Window
 				toolbarType: "sidebar",
 				fullName: _hoverText,
 				showServiceLayersInLegend: true,
@@ -265,7 +265,7 @@ define([
 					} else {
 						if (this._hasactivated == false) {
 							//TODO in what case does the code fall in here?
-							//this.rebuildOptions();
+							this.rebuildOptions();
 							this.changeGeography(this.geography, false);
 							this.stateRestore = false;
 						}
@@ -362,9 +362,6 @@ define([
 					if (this.introLayer != undefined) {
 						this.map.removeLayer(this.introLayer)
 					}
-					if (this.introLayerFull != undefined) {
-						this.map.removeLayer(this.introLayerFull)
-					}
 					this.sliders = new Array();
 					if (this.sliderpane != undefined) {
 						this.sliderpane.destroy();
@@ -409,10 +406,10 @@ define([
 				 * Args:
 				 * 		
 				*/
-        rebuildOptions: function() {
+        		rebuildOptions: function() {
 					console.debug('habitat_explorer; main.js; rebuildOptions()');
 					domConstruct.empty(this.ddNode);
-					$('<h3 style="margin-top: 0px;">New York Streams</h3>').appendTo($(this.ddNode));	
+					$('<h3 style="margin-top: 0px;">New York Forests</h3>').appendTo($(this.ddNode));	
 					outerBox = $('<div class="eeheader" style="display: none" />').appendTo($(this.ddNode));
 					s = $('<select class="chosenDD chosen-select mainChosen" id=expGeoSelect" data-placeholder="' + _config.ddText + '" />')
 					$('<option />', {value: "", text: ""}).appendTo(s);
@@ -462,7 +459,7 @@ define([
 				 * Args:
 				 * 		
 				*/
-				zoomToAppExtent: function() {
+				zoomToAppExtent: function(){
 					//!! new internal method for setting extent to framework extent
 					//get the app's initial extent and use for the extent
 					//console.debug('this.app.regionConfig', this.app.regionConfig.initialExtent);
@@ -543,10 +540,6 @@ define([
 					if (this.introLayer != undefined) {
 						this.map.removeLayer(this.introLayer)
 						this.introLayer = undefined;
-					}	
-					if (this.introLayerFull != undefined) {
-						this.map.removeLayer(this.introLayerFull)
-						this.introLayerFull = undefined;
 					}	
 					if (this.buttonpane != undefined) {
 						this.buttonpane.destroy();
@@ -728,33 +721,23 @@ define([
 					domStyle.set(this.textnode, "display", "none");
 					//Instructions Tab
 					if (geography.intro != undefined) {
-						this.sliderpane = new ContentPane({
-							style: "display: none",
-							title: geography.intro.name,
-							index: -1,
-							"data-index": -1,
-							content: geography.intro.text
-						});	
-						this.sliderpane.titleText = geography.intro.name;//LM hanging on a new sliderpane property for easy access to the tab title name
-						this.tabpan.addChild(this.sliderpane);	
-					}
-					if (this.introLayer != undefined && this.introLayerFull != undefined) {
-						this.introLayer = new ArcGISDynamicMapServiceLayer(geography.intro.layer.url,{
-							useMapImage: true,
-							maxScale: 2000000,
+						/* CBESSEE */
+
+						// Create Getting started panel
+						this.introPane = new ContentPane({
+							content: geography.intro.text,
+							style: "width: 475px; position: absolute; opacity: 1; top: 0px; padding: 0px !important; z-index: 950; height: 100%; overflow-y: scroll; background-color: white;"
 						});
-						this.introLayerFull = new ArcGISDynamicMapServiceLayer(geography.intro.layer.url, {
-							useMapImage: true,
-							minScale: 2000000
-						})
-						this.introLayer.setVisibleLayers([0]);
-						this.introLayerFull.setVisibleLayers([1]);
-						this.map.addLayer(this.introLayer);
-						this.map.addLayer(this.introLayerFull);
+						dom.byId(this.container).appendChild(this.introPane.domNode);
+						this.exploreRecs = dojoquery(".exploreRecs");
+						on(this.exploreRecs, "click", lang.hitch(this,function(e){
+							domStyle.set(this.introPane.domNode, "display", "none");
+						}));
 					}
 					ancillaryon = new Array();
 					//iterate over tabs array from config
 					array.forEach(geography.tabs, lang.hitch(this,function(tab, t){
+
 						if (tab.hoverText == undefined) { tab.hoverText = "" }
 						this.sliderpane = new ContentPane({
 							"data-pane": "ActualTabs",
@@ -978,7 +961,7 @@ define([
 												cb.set("checked", false);
 											}));
 										}),
-										style: "width:500px;margin-top:10px;margin-bottom:20px"
+										style: "width:425px;margin-top:10px;margin-bottom:20px"
 									}, nslidernode);
 									parser.parse()
 								}
@@ -1003,47 +986,13 @@ define([
 						this.sliderpane.titleText = geography.combined.name;//LM hanging on a new sliderpane property for easy access to the tab title name
 						this.tabpan.addChild(this.sliderpane);						
 					}
-					if (this.isVector == true)  {
-						this.currentLayer = new ArcGISDynamicMapServiceLayer(geography.url);
-					} else {
-						params = new ImageServiceParameters();
-						params.interpolation = ImageServiceParameters.INTERPOLATION_NEARESTNEIGHBOR;
-						this.currentLayer = ArcGISImageServiceLayer(geography.url, {
-						  imageServiceParameters: params,
-						  opacity: 1
-						});
-					}
-
 					//below is the only use of dojo/aspect in this file. Should this be dojo/on?
 					aspect.after(this.tabpan, "selectChild", lang.hitch(this,function (e, o) {
 						//called after selecting a new tab in the tab control
 						console.debug('Tab container selectChild event handling....');
 						this.resize();
 						selindex = o[0].index;
-						if (selindex != -1) {
-							if (this.introLayer != undefined) {
-								  this.map.removeLayer(this.introLayer);
-							}
-							if (this.introLayerFull != undefined) {
-								this.map.removeLayer(this.introLayerFull);
-						}
-							$(this.printButton).show();
-						} else {
-							$(this.printButton).hide();
-							this.introLayer = new ArcGISDynamicMapServiceLayer(geography.intro.layer.url,{
-								useMapImage: true,
-								maxScale: 2000000
-							});
-							this.introLayer.setVisibleLayers([0])
-							this.map.addLayer(this.introLayer);
-
-							this.introLayerFull = new ArcGISDynamicMapServiceLayer(geography.intro.layer.url,{
-								useMapImage: true,
-								minScale: 2000000
-							});
-							this.introLayerFull.setVisibleLayers([1])
-							this.map.addLayer(this.introLayerFull);
-						}
+						console.log("index", selindex);
 						if (selindex == geography.tabs.length) {
 							//'Recommendations' tab
 							a = lang.hitch(this,function(){this.doCombined()})
@@ -1057,6 +1006,16 @@ define([
 					}));
 					this.tabpan.startup();
 
+					if (this.isVector == true)  {
+						this.currentLayer = new ArcGISDynamicMapServiceLayer(geography.url);
+					} else {
+						params = new ImageServiceParameters();
+						params.interpolation = ImageServiceParameters.INTERPOLATION_NEARESTNEIGHBOR;
+						this.currentLayer = ArcGISImageServiceLayer(geography.url, {
+						  imageServiceParameters: params,
+						  opacity: 1
+						});
+					}
 					dojo.connect(this.currentLayer, "onLoad", lang.hitch(this,function(e){
 						this.updateService(zoomto);
 					}));
@@ -1088,11 +1047,14 @@ define([
 					if(this.stateTabIndex != null){
 						try{
 							var tabsArr = this.tabpan.getChildren();
-							this.tabpan.selectChild(tabsArr[this.stateTabIndex + 1]); 
+							this.tabpan.selectChild(tabsArr[this.stateTabIndex]); 
 						} catch(err){
 							//most likely reason to fall in here would be an out-of-bounds index for the tabsarr index
 							console.error('Unable to set current tab: ', err);
 						}
+					} else {
+						var tabsArr = this.tabpan.getChildren();
+						this.tabpan.selectChild(tabsArr[tabsArr.length - 1]); 
 					}
 					//clear the 'state' vars in case they were set/used in initial load from 'save and share' link (see method setState()).
 					this.stateTabIndex = null;
@@ -1182,7 +1144,7 @@ define([
 				 * 		tabIndex {integer} - The index number of a Tab in the Tab Panel
 				 * 		
 				*/
-			  getFormula: function(tabIndex) {
+			   	getFormula: function(tabIndex) {
 					console.debug('habitat_explorer; main.js; getFormula()');
 					this.BandFormula = new Array();
 					this.GroupTotals = new Array();
@@ -1539,35 +1501,6 @@ define([
 					}
 					tabs = this.tabpan.getChildren();
 					selectedIndex = this.tabpan.selectedChildWidget.index;
-					//Instructions tab is at index -1
-					if (selectedIndex == -1) {
-						//toggle visibility of tab[0] main content
-						domClass.remove(dojoquery(tabs[0].containerNode).parent()[0], "dijitHidden");
-						domClass.add(dojoquery(tabs[0].containerNode).parent()[0], "dijitVisible");
-						//this.introLayer is undefined at this point on first load.
-						if (this.introLayer == undefined) {
-							this.introLayer = new ArcGISDynamicMapServiceLayer(this.geography.intro.layer.url,{
-								useMapImage: true,
-								maxScale: 2000000
-							});
-							//value of this.geography.intro.layer.show, as currently set in config, is [118]
-							this.introLayer.setVisibleLayers([0]);
-							this.map.addLayer(this.introLayer);	
-						}
-						if (this.introLayerFull == undefined) {
-							this.introLayerFull = new ArcGISDynamicMapServiceLayer(this.geography.intro.layer.url,{
-								useMapImage: true,
-								minScale: 2000000
-							});
-							//value of this.geography.intro.layer.show, as currently set in config, is [118]
-							this.introLayerFull.setVisibleLayers([1]);
-							this.map.addLayer(this.introLayerFull);	
-						}
-					} else {
-						//toggle visibility of tab[0] main content
-						domClass.remove(dojoquery(tabs[0].containerNode).parent()[0], "dijitVisible");
-						domClass.add(dojoquery(tabs[0].containerNode).parent()[0], "dijitHidden");					
-					}
 				},
 				/** 
 				 * TODO deprecated LM 3/15/18
@@ -1722,7 +1655,6 @@ define([
 						idTask = new esri.tasks.ImageServiceIdentifyTask(this.geography.url);
 						identifyParams = new ImageServiceIdentifyParameters();
 						identifyParams.returnGeometry = false;
-						identifyParams.tolerance = 6;
 						identifyParams.geometry = point;
 						//identifyParams.renderingRule = this.renderingRule;					
 						idTask.execute(identifyParams, lang.hitch(this,function(identifyResults) {
@@ -1761,7 +1693,7 @@ define([
 											
 										}));
 										array.forEach(identifyValues, lang.hitch(this,function(idval, j){
-											combinedFormulas = combinedFormulas.replace("B"+(j+1)+")", idval + ")");
+											combinedFormulas = combinedFormulas.replace("B"+(j+1), idval);
 											var ci = "B" + (j+1);
 											array.forEach(this.sliders, lang.hitch(this,function(slid, i){
 												outvaluetext = slid.value;
