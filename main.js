@@ -301,7 +301,7 @@ define([
 							domStyle.set(this.introPane.domNode, "display", "none");
 						}));
 					}
-
+					
 					//after first call to active, this._hasactivated = true;
 					this._hasactivated = true;
 				},
@@ -395,7 +395,7 @@ define([
 					domStyle.set(this.textnode, "display", "");
 					if (this.button != undefined) {
 						this.button.set("label",_ddText);
-					}a
+					}
 					this._hasactivated = false;
 					this.explorerObject = dojo.eval("[" + explorer + "]")[0];
 
@@ -1326,6 +1326,7 @@ define([
 					} else {
 						//Not Vector...
 						rfout = this.combiner.combineFunction(this.formulas, this.geography, this.Tformulas, rfuncs);
+						console.log(rfout);
 						this.legendContainer.innerHTML = '<div id="mExplorerLegend' + "_" + this.map.id + '">' + rfout.legendHTML + "</div>"
 						this.currentLayer.setRenderingRule(rfout.renderRule);
 					}
@@ -1483,7 +1484,7 @@ define([
 					//For both FOREST and STREAMS
 					innerSyms = "";
 					array.forEach(lcolorRamp, lang.hitch(this,function(cColor, i){
-						innerSyms = innerSyms + '<div style="position: absolute; color-adjust: exact; -webkit-print-color-adjust: exact; print-color-adjust: exact; left: 0; width: 30px; height: 20px; border: 1px solid black; top: '+ (i * 30) + 'px; background-color:rgb('+ cColor[legIndexes[0]] + "," + cColor[legIndexes[1]] + "," + cColor[legIndexes[2]] + ');" ></div>'
+						innerSyms = innerSyms + '<div style="position: absolute; left: 0; 		color-adjust: exact;  -webkit-print-color-adjust: exact; print-color-adjust: exact; width: 30px; height: 20px; border: 1px solid black; top: '+ (i * 30) + 'px; background-color:rgb('+ cColor[legIndexes[0]] + "," + cColor[legIndexes[1]] + "," + cColor[legIndexes[2]] + ');" ></div>'
 					}));
 					if ( this.geography.outputLabels == undefined) {
 						this.geography.outputLabels = [{text:"Low", "percent": "0"},{text:"Medium", "percent": "50"},{text:"High", "percent": "100"}];
@@ -1660,6 +1661,8 @@ define([
 						return;
 					}
 					if (this.currentLayer && this.currentLayer.url.includes("ImageServer") == true) {
+						expandScript = 'function toggleVarTable() {var expand = document.getElementById("toggle-table");var table = document.getElementById("var-table");if(expand.innerHTML == "More Details") {expand.innerHTML = "Less Details";table.style.display = "block";} else {expand.innerHTML = "More Details";table.style.display = "none";}} toggleVarTable(); return false;';
+
 						//FOREST processing
 						idTask = new esri.tasks.ImageServiceIdentifyTask(this.geography.url);
 						identifyParams = new ImageServiceIdentifyParameters();
@@ -1690,7 +1693,7 @@ define([
 										processResults("<br> Value at Mouse Click: <b>" + dojo.eval(replacedFormula).toFixed(3).replace(".000", '') + "</b><br>" + idtable + "Formula: <br>" + this.geography.BandFormulaText);	
 									} else {
 										//user is on the Recommendations tab, loop over all sliders from all tabs.
-										idtable = '<br><table border="1"><tr><th width="50%"><center>Variable</center></th><th width="25%"><center>Value</center></th><th width="25%"><center>Weight</center></th></tr>';
+										idtable = `<br><div id="toggle-table" onclick='` + expandScript + `' style="cursor: pointer; color: blue; text-decoration: underline;">More Details</div><br/><div id="var-table" style="display:none"><table border="1"><tr><th width="50%"><center>Variable</center></th><th width="25%"><center>Value</center></th><th width="25%"><center>Weight</center></th></tr>`;
 										identifyValues = dojo.eval("[" + identifyResults.value + "]");
 										combinedFormulas = '';
 										array.forEach(this.formulas, lang.hitch(this,function(formula,idx){
@@ -1711,7 +1714,7 @@ define([
 												}
 											}));
 										}));
-										idtable = idtable + '</table>';
+										idtable = idtable + '</table></div>';
 										processResults("<br> Value at Mouse Click: <b>" + dojo.eval(combinedFormulas).toFixed(3).replace(".000", '') + "</b><br>" + idtable);
 									}
 								} else {
