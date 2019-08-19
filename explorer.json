@@ -49,6 +49,10 @@
 										"type":"text"
 								 },
 								 {
+									"text": "<b>Current Condition Indicator Weights:</b>",
+									"type": "text"
+								 },
+								 {
 										"default":2,
 										"group":"all",
 										"index":"B5",
@@ -134,6 +138,10 @@
 										"text":"Adjust the sliders to alter the weight of each indicator in the overall score, or to “None” to remove it.  Adjustments will be reflected in the Recommendations.",
 										"type":"text"
 								 },
+								 {
+									"text": "<b>Current Threat Indicator Weights:</b>",
+									"type": "text"
+								},
 								 {
 										"default":2,
 										"group":"all",
@@ -246,6 +254,10 @@
 										"type":"text"
 								 },
 								 {
+									"text": "<b>Current Sensitivity Indicator Weights:</b>",
+									"type": "text"
+								},
+								 {
 										"default":2,
 										"group":"all",
 										"index":"B1",
@@ -309,6 +321,10 @@
 										"text":"Adjust the sliders to alter the weight of each indicator in the overall score, or to “None” to remove it.  Adjustments will be reflected in the Recommendations.",
 										"type":"text"
 								 },
+								 {
+									"text": "<b>Current Exposure Indicator Weights:</b>",
+									"type": "text"
+								},
 								 {
 										"default":2,
 										"group":"all",
