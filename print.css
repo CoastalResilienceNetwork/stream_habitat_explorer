@@ -55,6 +55,9 @@
 		-webkit-transform-origin: left top;
 		-webkit-transform: scale(1.2);
 		transform-style: scale(1.2);
+		color-adjust: exact; 
+		-webkit-print-color-adjust: exact; 
+		print-color-adjust: exact;
 	}
 	
 	#formulaprint{

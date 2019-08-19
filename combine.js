@@ -182,22 +182,19 @@ define([
 				"Raster" : rfa  //use the output of the remap rasterFunction for the Colormap rasterFunction
 			};
 						
-			innerSyms = ""
-			texter = ""
+			items = ""
 			
 			array.forEach(this.colors, lang.hitch(this,function(cColor, i){
-				innerSyms = innerSyms + '<rect x="0" y ="'+ (i * 30) + '" width="30" height="20" style="fill:rgb('+ cColor[1] + "," + cColor[2] + "," + cColor[3] + ');stroke-width:1;stroke:rgb(0,0,0)" />';
-				texter = texter + ' <text x="35" y ="' + ((i * 30) + 15) + '" fill="black">' + this.labels[i] + '</text>';
+				items = items + '<div class="item" style="margin-bottom: 3px;"> <div style="width: 15px; margin-right: 5px; display: inline-block; height: 15px; border: 1px solid black; color-adjust: exact; -webkit-print-color-adjust: exact; print-color-adjust: exact; background-color:rgb('+ cColor[1] + "," + cColor[2] + "," + cColor[3] + ');" ></div>' + '<span class="item-label" style="color: black; display: inline; line-height: 15px; vertical-align: top;">' + this.labels[i] + '</span></div>'
 			}));
-			
+
+
 			lh = ((this.colors.length) * 30) + 10
 			maxy = ((this.colors.length) * 30) - 15
 			
 			regfixname= " - " + geo.name
 			OUTPUTLABEL = '<div style="margin-bottom:7px" >' + "Habitat Explorer" + regfixname + " <br>Recommended Objective - Climate Risk" + '</div>'
-				+ '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="300px" height="' + lh + '">'
-				+ innerSyms
-				+ texter;
+				+ items;
 			outputData = {renderRule: colorRF, legendHTML: OUTPUTLABEL};
 			return outputData;
         },
