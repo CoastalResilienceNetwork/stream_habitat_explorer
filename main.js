@@ -234,6 +234,74 @@ define([
 						domStyle.set(this.infoarea.domNode, 'display', 'none');
 					}));
 					$(this.printButton).hide();
+
+
+					this.labelMap = [
+						{
+							value: 1000,
+							label: 'Maintain - Lower risk'
+						},
+						{
+							value: 1001,
+							label: 'Maintain - Moderate risk'
+						},
+						{
+							value: 1010,
+							label: 'Maintain - High risk'
+						},
+						{
+							value: 1011,
+							label: 'Maintain - Highest risk'
+						},
+						{
+							value: 1100,
+							label: 'Reduce Threats - Lower risk'
+						},
+						{
+							value: 1101,
+							label: 'Reduce Threats - Moderate risk'
+						},
+						{
+							value: 1110,
+							label: 'Reduce Threats - High risk'
+						},
+						{
+							value: 1111,
+							label: 'Reduce Threats - Highest risk'
+						},
+						{
+							value: 0,
+							label: 'Restore - Lower risk'
+						},
+						{
+							value: 1,
+							label: 'Restore - Moderate risk'
+						},
+						{
+							value: 10,
+							label: 'Restore - High risk'
+						},
+						{
+							value: 11,
+							label: 'Restore - Highest risk'
+						},
+						{
+							value: 100,
+							label: 'Reduce Threat & Restore - Lower risk'
+						},
+						{
+							value: 101,
+							label: 'Reduce Threat & Restore - Moderate risk'
+						},
+						{
+							value: 110,
+							label: 'Reduce Threat & Restore - High risk'
+						},
+						{
+							value: 111,
+							label: 'Reduce Threat & Restore - Highest risk'
+						}
+					];
 				},
 				/** 
 				 * Method: activate
@@ -1325,10 +1393,11 @@ define([
 						this.map.resize();
 					} else {
 						//Not Vector...
-						rfout = this.combiner.combineFunction(this.formulas, this.geography, this.Tformulas, rfuncs);
+						this.rfout = this.combiner.combineFunction(this.formulas, this.geography, this.Tformulas, rfuncs);
+
 						console.log(rfout);
-						this.legendContainer.innerHTML = '<div id="mExplorerLegend' + "_" + this.map.id + '">' + rfout.legendHTML + "</div>"
-						this.currentLayer.setRenderingRule(rfout.renderRule);
+						this.legendContainer.innerHTML = '<div id="mExplorerLegend' + "_" + this.map.id + '">' + this.rfout.legendHTML + "</div>"
+						this.currentLayer.setRenderingRule(this.rfout.renderRule);
 					}
 				},
 				/** 
@@ -1656,6 +1725,7 @@ define([
 				*/
 			   	identify: function(point, screenPoint, processResults) {
 					console.debug('habitat_explorer; main.js; identify()');
+
 					if(this.tabpan.selectedChildWidget.titleText == "Instructions"){
 						processResults("Note: Select the Recommendations tab to click on map for further details or other tabs to explore individual components.");
 						return;
@@ -1715,7 +1785,18 @@ define([
 											}));
 										}));
 										idtable = idtable + '</table></div>';
-										processResults("<br> Final Recommendation Score = <b>" + dojo.eval(combinedFormulas).toFixed(3).replace(".000", '') + "</b><br>" + idtable);
+										idTask2 = new esri.tasks.ImageServiceIdentifyTask(this.geography.url);
+										identifyParams2 = new ImageServiceIdentifyParameters();
+										identifyParams2.returnGeometry = false;
+										identifyParams2.renderingRule = this.rfout.renderRule;
+										identifyParams2.geometry = point;
+										//identifyParams.renderingRule = this.renderingRule;					
+										idTask2.execute(identifyParams2, lang.hitch(this,function(identifyResults) {
+											var recommendation = this.labelMap.find((item) => {
+												return item.value == identifyResults.value;
+											});
+											processResults("<div style='max-height: 300px; overflow-y: scroll;'><br> Final Recommendation Score = <b>" + dojo.eval(combinedFormulas).toFixed(3).replace(".000", '') + " " + recommendation.label + "</b><br>" + idtable + "</div>");
+										}));
 									}
 								} else {
 									//user is on the Instructions tab
