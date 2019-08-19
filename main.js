@@ -299,6 +299,9 @@ define([
 						on(this.exploreRecs, "click", lang.hitch(this,function(e) {
 							console.log('close click');
 							domStyle.set(this.introPane.domNode, "display", "none");
+
+							var tabsArr = this.tabpan.getChildren();
+							this.tabpan.selectChild(tabsArr[tabsArr.length - 1]); 
 						}));
 					}
 					
@@ -518,7 +521,7 @@ define([
 					}));
 					this.changeGeography(outreg, false);
 					tabs = this.tabpan.getChildren();
-					this.tabpan.selectChild(tabs[selectedIndex + 1]);
+					this.tabpan.selectChild(tabs[selectedIndex]);
 				},
 				/** 
 				 * Method: resetTab
@@ -544,7 +547,7 @@ define([
 					this.geography.tabs[selectedIndex] = outreg.tabs[selectedIndex]
 					this.changeGeography(this.geography, false);
 					tabs = this.tabpan.getChildren();
-					this.tabpan.selectChild(tabs[selectedIndex + 1]);
+					this.tabpan.selectChild(tabs[selectedIndex]);
 				},
 				/** 
 				 * Method: resetPanel
@@ -1061,9 +1064,6 @@ define([
 							//most likely reason to fall in here would be an out-of-bounds index for the tabsarr index
 							console.error('Unable to set current tab: ', err);
 						}
-					} else {
-						var tabsArr = this.tabpan.getChildren();
-						this.tabpan.selectChild(tabsArr[tabsArr.length - 1]); 
 					}
 					//clear the 'state' vars in case they were set/used in initial load from 'save and share' link (see method setState()).
 					this.stateTabIndex = null;
@@ -1674,7 +1674,7 @@ define([
 								if(this.tabpan.selectedChildWidget.titleText != "Instructions"){
 									if(this.tabpan.selectedChildWidget.titleText != "Recommendations"){
 										//If on a tab with slider options, process the specific function and slider values from this tab.
-										idtable = '<br><table border="1"><tr><th width="50%"><center>Variable</center></th><th width="25%"><center>Value</center></th><th width="25%"><center>Weight</center></th></tr>';
+										idtable = `<br><div id="toggle-table" onclick='` + expandScript + `' style="cursor: pointer; color: blue; text-decoration: underline;">More Details</div><br/><div id="var-table" style="display:none"><table border="1"><tr><th width="50%"><center>Variable</center></th><th width="25%"><center>Value</center></th><th width="25%"><center>Weight</center></th></tr>`;
 										identifyValues = dojo.eval("[" + identifyResults.value + "]");
 										replacedFormula = this.formula;
 										varFormula = this.formula;
@@ -1689,8 +1689,8 @@ define([
 												}
 											}));
 										}));
-										idtable = idtable + '</table>';
-										processResults("<br> Value at Mouse Click: <b>" + dojo.eval(replacedFormula).toFixed(3).replace(".000", '') + "</b><br>" + idtable + "Formula: <br>" + this.geography.BandFormulaText);	
+										idtable = idtable + '</table></div>';
+										processResults("<br> " + this.tabpan.selectedChildWidget.titleText + " Score = <b>" + dojo.eval(replacedFormula).toFixed(3).replace(".000", '') + "</b><br>" + idtable + "Formula: <br>" + this.geography.BandFormulaText);	
 									} else {
 										//user is on the Recommendations tab, loop over all sliders from all tabs.
 										idtable = `<br><div id="toggle-table" onclick='` + expandScript + `' style="cursor: pointer; color: blue; text-decoration: underline;">More Details</div><br/><div id="var-table" style="display:none"><table border="1"><tr><th width="50%"><center>Variable</center></th><th width="25%"><center>Value</center></th><th width="25%"><center>Weight</center></th></tr>`;
@@ -1715,7 +1715,7 @@ define([
 											}));
 										}));
 										idtable = idtable + '</table></div>';
-										processResults("<br> Value at Mouse Click: <b>" + dojo.eval(combinedFormulas).toFixed(3).replace(".000", '') + "</b><br>" + idtable);
+										processResults("<br> Final Recommendation Score = <b>" + dojo.eval(combinedFormulas).toFixed(3).replace(".000", '') + "</b><br>" + idtable);
 									}
 								} else {
 									//user is on the Instructions tab
