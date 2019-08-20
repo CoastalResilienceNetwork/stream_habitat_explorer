@@ -1083,6 +1083,20 @@ define([
 							//'Recommendations' tab
 							a = lang.hitch(this,function(){this.doCombined()})
 							setTimeout(a, 500);
+
+							var changedText = 'No';
+							array.forEach(this.sliders, lang.hitch(this,function(slide, i){
+								if(slide.value != 2) {
+									changedText = 'Yes'
+								}
+							}));
+
+							//ga = google analytics, set in index.cshtml view, globally available
+							try{
+								ga('send', 'event', 'Recommendations Selected', 'Weights changed? ' + changedText);
+							} catch(err) {
+								console.error("ga not available", err);
+							}
 						} else {
 							//all other tabs
 							a = lang.hitch(this,function(){this.updateService()})
