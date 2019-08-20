@@ -375,6 +375,12 @@ define([
 					
 					//after first call to active, this._hasactivated = true;
 					this._hasactivated = true;
+
+					$('<link>', {
+						rel: 'stylesheet',
+						href: 'plugins/stream_habitat_explorer/print.css',
+						'class': 'app-printing-css'
+					}).appendTo('head');
 				},
 				/** 
 				 * Method: deactivate
