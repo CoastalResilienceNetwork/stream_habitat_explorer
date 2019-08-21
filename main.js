@@ -1415,7 +1415,6 @@ define([
 						//Not Vector...
 						this.rfout = this.combiner.combineFunction(this.formulas, this.geography, this.Tformulas, rfuncs);
 
-						console.log(rfout);
 						this.legendContainer.innerHTML = '<div id="mExplorerLegend' + "_" + this.map.id + '">' + this.rfout.legendHTML + "</div>"
 						this.currentLayer.setRenderingRule(this.rfout.renderRule);
 					}
@@ -1757,6 +1756,7 @@ define([
 						idTask = new esri.tasks.ImageServiceIdentifyTask(this.geography.url);
 						identifyParams = new ImageServiceIdentifyParameters();
 						identifyParams.returnGeometry = false;
+						identifyParams.tolerance = 6;
 						identifyParams.geometry = point;
 						//identifyParams.renderingRule = this.renderingRule;					
 						idTask.execute(identifyParams, lang.hitch(this,function(identifyResults) {
@@ -1795,7 +1795,7 @@ define([
 											
 										}));
 										array.forEach(identifyValues, lang.hitch(this,function(idval, j){
-											combinedFormulas = combinedFormulas.replace("B"+(j+1), idval);
+											combinedFormulas = combinedFormulas.replace("B"+(j+1)+")", idval + ")");
 											var ci = "B" + (j+1);
 											array.forEach(this.sliders, lang.hitch(this,function(slid, i){
 												outvaluetext = slid.value;
@@ -1815,6 +1815,7 @@ define([
 											var recommendation = this.labelMap.find((item) => {
 												return item.value == identifyResults.value;
 											});
+											console.log(combinedFormulas);
 											processResults("<div style='max-height: 300px; overflow-y: scroll;'><br> Final Recommendation Score = <b>" + dojo.eval(combinedFormulas).toFixed(3).replace(".000", '') + " " + recommendation.label + "</b><br>" + idtable + "</div>");
 										}));
 									}
