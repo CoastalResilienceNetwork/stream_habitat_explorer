@@ -4,14 +4,16 @@ define([
 	"esri/symbols/SimpleLineSymbol",
 	"dojo/_base/array",
 	"dojo/_base/lang",
-    "dojo/dom"
+		"dojo/dom",
+		"dojo/text!./explorer.json",
 ], function(
 	declare, 
 	RasterFunction,
 	SimpleLineSymbol,
 	array,
 	lang,
-	dom
+	dom,
+	explorer
 	){
     return declare(null, {
         
@@ -191,10 +193,15 @@ define([
 
 			lh = ((this.colors.length) * 30) + 10
 			maxy = ((this.colors.length) * 30) - 15
+
+			const explorerJSON = JSON.parse(explorer);
 			
 			regfixname= " - " + geo.name
 			OUTPUTLABEL = '<div style="margin-bottom:7px" >' + "Habitat Explorer" + regfixname + " <br>Recommended Objective - Climate Risk" + '</div>'
 				+ items;
+				if(explorerJSON.legendPDF) {
+					OUTPUTLABEL = OUTPUTLABEL + "<br> <a href='" + explorerJSON.legendPDF + "' target='_blank'>More Details</a>";
+				}
 			outputData = {renderRule: colorRF, legendHTML: OUTPUTLABEL};
 			return outputData;
         },
