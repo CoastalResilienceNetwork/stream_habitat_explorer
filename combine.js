@@ -200,7 +200,7 @@ define([
 			OUTPUTLABEL = '<div style="margin-bottom:7px" >' + "Habitat Explorer" + regfixname + " <br>Recommended Objective - Climate Risk" + '</div>'
 				+ items;
 				if(explorerJSON.legendPDF) {
-					OUTPUTLABEL = OUTPUTLABEL + "<br> <a href='" + explorerJSON.legendPDF + "' target='_blank'>More Details</a>";
+					OUTPUTLABEL = "<a href='" + explorerJSON.legendPDF + "' target='_blank'>More Details</a> <br>" + OUTPUTLABEL;
 				}
 			outputData = {renderRule: colorRF, legendHTML: OUTPUTLABEL};
 			return outputData;

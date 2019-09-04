@@ -303,3 +303,7 @@ label.checkBoxLabels input[type=checkbox]{
     text-indent: -25px;
     margin-left: 20px;
 }
+
+.esriPopup .titleButton.maximize {
+	display: none !important;
+}

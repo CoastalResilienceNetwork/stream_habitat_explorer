@@ -1,4 +1,8 @@
-﻿@media print {
+﻿.esriPopup .titleButton.maximize {
+	display: none !important;
+}
+
+@media print {
 	
 	@page { 
         size: landscape;

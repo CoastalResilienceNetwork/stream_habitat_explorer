@@ -234,6 +234,7 @@ define([
 						domStyle.set(this.infoarea.domNode, 'display', 'none');
 					}));
 					$(this.printButton).hide();
+					this.introLaunched = false;
 
 
 					this.labelMap = [
@@ -310,7 +311,8 @@ define([
 				 * Args:
 				 * 		arg {boolean} - if above assumption is true, then the arg value is to direct supression of help at startup. Currently not used.
 				*/
-				activate: function (arg) {		
+				activate: function (arg) {	
+					console.log("stream-act", this.stateRestore);	
 					console.debug('habitat_explorer; main.js; activate()',arg);
 					this.combiner = new combine(); //TODO where/how is this used?
 					if (this.currentLayer != undefined)  {
@@ -324,6 +326,24 @@ define([
 						if (this._hasactivated == false) {
 							//1st call to activate falls into here
 							this.rebuildOptions(); 
+
+							//Instructions Tab
+							if (this.usableRegions[0].intro != undefined && this.introPane == undefined && this.stateRestore == false) {
+								/* CBESSEE */
+
+								// Create Getting started panel
+								this.introPane = new ContentPane({
+									content: this.usableRegions[0].intro.text,
+									style: "width: 475px; position: absolute; opacity: 1; top: 0px; padding: 0px !important; z-index: 950; height: 100%; overflow-y: scroll; background-color: white;"
+								});
+								dom.byId(this.container).appendChild(this.introPane.domNode);
+								this.introLaunched = true;
+								this.exploreRecs = dojoquery(".exploreRecs");
+								on(this.exploreRecs, "click", lang.hitch(this,function(e) {
+									console.log('close click');
+									domStyle.set(this.introPane.domNode, "display", "none");
+								}));
+							}
 						}
 						if ((this._hasactivated == false) && (this.usableRegions.length == 1)) {
 							//1st call to activate does not fall into here (because there is more than one usableRegion)
@@ -345,33 +365,17 @@ define([
 						this.changeGeography(this.usableRegions[0], !(_noZoom));
 					}
 
+					if(this._hasactivated == false && this.introLaunched == true) {
+						var tabsArr = this.tabpan.getChildren();
+						this.tabpan.selectChild(tabsArr[tabsArr.length - 1]); 
+					}
+
 					//TODO convert function handler to method.
 					this._mapZoomEnd = this.map.on("zoom-end", lang.hitch(this,function(evt){
 						//console.debug('map.zoom-end handler: ', this.map.getZoom());
 						//handle level-of-detail logic here.
 					}));
 
-
-					//Instructions Tab
-					if (this.geography.intro != undefined && this.introPane == undefined) {
-						/* CBESSEE */
-
-						// Create Getting started panel
-						this.introPane = new ContentPane({
-							content: this.geography.intro.text,
-							style: "width: 475px; position: absolute; opacity: 1; top: 0px; padding: 0px !important; z-index: 950; height: 100%; overflow-y: scroll; background-color: white;"
-						});
-						dom.byId(this.container).appendChild(this.introPane.domNode);
-						this.exploreRecs = dojoquery(".exploreRecs");
-						console.log('woo');
-						on(this.exploreRecs, "click", lang.hitch(this,function(e) {
-							console.log('close click');
-							domStyle.set(this.introPane.domNode, "display", "none");
-
-							var tabsArr = this.tabpan.getChildren();
-							this.tabpan.selectChild(tabsArr[tabsArr.length - 1]); 
-						}));
-					}
 					
 					//after first call to active, this._hasactivated = true;
 					this._hasactivated = true;
@@ -596,6 +600,9 @@ define([
 					this.changeGeography(outreg, false);
 					tabs = this.tabpan.getChildren();
 					this.tabpan.selectChild(tabs[selectedIndex]);
+					if(selectedIndex == 0) {
+						domClass.remove(tabs[0].containerNode.parentNode, 'dijitHidden');
+					}
 				},
 				/** 
 				 * Method: resetTab
@@ -617,11 +624,14 @@ define([
 						if (reg.name == this.geography.name) {
 							outreg = reg;
 						}
-					}));					
+					}));			
 					this.geography.tabs[selectedIndex] = outreg.tabs[selectedIndex]
 					this.changeGeography(this.geography, false);
 					tabs = this.tabpan.getChildren();
 					this.tabpan.selectChild(tabs[selectedIndex]);
+					if(selectedIndex == 0) {
+						domClass.remove(tabs[0].containerNode.parentNode, 'dijitHidden');
+					}
 				},
 				/** 
 				 * Method: resetPanel
@@ -706,17 +716,20 @@ define([
 					this.resetPanel();
 					//TODO is below 'if' statement needed? Does code ever drop in there?
 					if (geography.tabs == undefined) {
+						console.log('undefined');
 						geography.tabs = new Array();
 						geography.tabs.push({"name":""});
 						geography.tabs[0].items = geography.items
 					}				
 					if (geography.tabs.length == 1) {
+						console.log('1');
 						this.tabpan = new ContentPane({
 							style:"padding: 8px"
 						});
 						this.tabpan.layout = function() {console.log('layout')};
 						$(this.printButton).show();
 					} else {
+						console.log('else');
 						//explorer.json has no tabtype property for a region. why is this here?
 						if (geography.tabtype == "radio") {
 							this.tabpan = new ContentPane({
@@ -1072,6 +1085,9 @@ define([
 						this.sliderpane.titleText = geography.combined.name;//LM hanging on a new sliderpane property for easy access to the tab title name
 						this.tabpan.addChild(this.sliderpane);						
 					}
+
+					this.tabpan.startup();
+
 					//below is the only use of dojo/aspect in this file. Should this be dojo/on?
 					aspect.after(this.tabpan, "selectChild", lang.hitch(this,function (e, o) {
 						//called after selecting a new tab in the tab control
@@ -1104,7 +1120,6 @@ define([
 						}
 						this.resize();
 					}));
-					this.tabpan.startup();
 
 					if (this.isVector == true)  {
 						this.currentLayer = new ArcGISDynamicMapServiceLayer(geography.url);
@@ -1145,6 +1160,7 @@ define([
 
 					//settting the selected tab via 'state' is near the bottom here because the 'selectChild' evetn hanlding needs to have this.currentLayer populated.
 					if(this.stateTabIndex != null){
+						console.log('state');
 						try{
 							var tabsArr = this.tabpan.getChildren();
 							this.tabpan.selectChild(tabsArr[this.stateTabIndex]); 
