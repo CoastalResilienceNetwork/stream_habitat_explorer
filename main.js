@@ -1593,16 +1593,16 @@ define([
 					//For both FOREST and STREAMS
 					innerSyms = "";
 					array.forEach(lcolorRamp, lang.hitch(this,function(cColor, i){
-						innerSyms = innerSyms + '<div style="position: absolute; left: 0; 		color-adjust: exact;  -webkit-print-color-adjust: exact; print-color-adjust: exact; width: 30px; height: 20px; border: 1px solid black; top: '+ (i * 30) + 'px; background-color:rgb('+ cColor[legIndexes[0]] + "," + cColor[legIndexes[1]] + "," + cColor[legIndexes[2]] + ');" ></div>'
+						innerSyms = innerSyms + '<div style="position: absolute; left: 0; color-adjust: exact; -webkit-print-color-adjust: exact; print-color-adjust: exact; width: 20px; height: 14px; border: 1px solid black; top: '+ (i * 22) + 'px; background-color:rgb('+ cColor[legIndexes[0]] + "," + cColor[legIndexes[1]] + "," + cColor[legIndexes[2]] + ');" ></div>'
 					}));
 					if ( this.geography.outputLabels == undefined) {
 						this.geography.outputLabels = [{text:"Low", "percent": "0"},{text:"Medium", "percent": "50"},{text:"High", "percent": "100"}];
 					}	
-					lh = ((lcolorRamp.length) * 30) + 10;
-					maxy = ((lcolorRamp.length) * 30) - 30;
+					lh = ((lcolorRamp.length) * 21) + 10;
+					maxy = ((lcolorRamp.length) * 21) - 21;
 					labs = "";
 					array.forEach(this.geography.outputLabels, lang.hitch(this,function(lab, i){
-						labs = labs + '<div style="color: black; display: inline-block; left: 35px; top: ' +((maxy * (lab.percent / 100))) + 'px; position: absolute">' + lab.text + '</div>'
+						labs = labs + '<div style="color: black; display: inline-block; left: 25px; top: ' +((maxy * (lab.percent / 100))) + 'px; position: absolute">' + lab.text + '</div>'
 					}));
 					this.legendContainer.innerHTML = '<div style="margin-bottom:7px" id="mExplorerLegend' + "_" + this.map.id + '">' + this.toolbarName + regfixname + ctabname + '</div>'
 						+ '<div style="position: relative;" width="500px" height="' + lh + '">'
