@@ -1,4 +1,8 @@
-﻿@media print {
+﻿.esriPopup .titleButton.maximize {
+	display: none !important;
+}
+
+@media print {
 	
 	@page { 
         size: landscape;
@@ -48,13 +52,39 @@
 	}
 	
 	#legendprint{
-	   visibility: visible;
+	  visibility: visible;
 		top:100px;
 		left:0px;
+		width: 100%;
 		position:absolute;
 		-webkit-transform-origin: left top;
 		-webkit-transform: scale(1.2);
 		transform-style: scale(1.2);
+	}
+
+	.legend-header  {
+		display: none !important;
+		height: 0px;
+	}
+
+	#legend-container-0 {
+		width: 10.95in !important;
+	}
+
+	.plugin-legends {
+		width: 10.95in !important;
+		display: block !important;
+	}
+
+	.custom-legend {
+		width: 10.95in !important;
+		max-width: 10.95in !important;
+		display: block !important;
+	}
+
+	.item {
+		display: inline-block !important;
+		margin-left: 3px;
 	}
 	
 	#formulaprint{

@@ -159,7 +159,7 @@ define([
 			//See Wiki for info on initial settings: https://github.com/CoastalResilienceNetwork/GeositeFramework/wiki/Plugin-Settings
 			return declare(PluginBase, {
 				//Plugin Settings
-				toolbarName: "Streams Explorer", //toolbarName is used as the title in the Identify Window
+				toolbarName: "Streams Explorer",//_config.name, //toolbarName is used as the title in the Identify Window
 				toolbarType: "sidebar",
 				fullName: _hoverText,
 				showServiceLayersInLegend: true,
@@ -234,6 +234,75 @@ define([
 						domStyle.set(this.infoarea.domNode, 'display', 'none');
 					}));
 					$(this.printButton).hide();
+					this.introLaunched = false;
+
+
+					this.labelMap = [
+						{
+							value: 1000,
+							label: 'Maintain - Lower risk'
+						},
+						{
+							value: 1001,
+							label: 'Maintain - Moderate risk'
+						},
+						{
+							value: 1010,
+							label: 'Maintain - High risk'
+						},
+						{
+							value: 1011,
+							label: 'Maintain - Highest risk'
+						},
+						{
+							value: 1100,
+							label: 'Reduce Threats - Lower risk'
+						},
+						{
+							value: 1101,
+							label: 'Reduce Threats - Moderate risk'
+						},
+						{
+							value: 1110,
+							label: 'Reduce Threats - High risk'
+						},
+						{
+							value: 1111,
+							label: 'Reduce Threats - Highest risk'
+						},
+						{
+							value: 0,
+							label: 'Restore - Lower risk'
+						},
+						{
+							value: 1,
+							label: 'Restore - Moderate risk'
+						},
+						{
+							value: 10,
+							label: 'Restore - High risk'
+						},
+						{
+							value: 11,
+							label: 'Restore - Highest risk'
+						},
+						{
+							value: 100,
+							label: 'Reduce Threat & Restore - Lower risk'
+						},
+						{
+							value: 101,
+							label: 'Reduce Threat & Restore - Moderate risk'
+						},
+						{
+							value: 110,
+							label: 'Reduce Threat & Restore - High risk'
+						},
+						{
+							value: 111,
+							label: 'Reduce Threat & Restore - Highest risk'
+						}
+					];
 				},
 				/** 
 				 * Method: activate
@@ -242,7 +311,8 @@ define([
 				 * Args:
 				 * 		arg {boolean} - if above assumption is true, then the arg value is to direct supression of help at startup. Currently not used.
 				*/
-				activate: function (arg) {		
+				activate: function (arg) {	
+					console.log("stream-act", this.stateRestore);	
 					console.debug('habitat_explorer; main.js; activate()',arg);
 					this.combiner = new combine(); //TODO where/how is this used?
 					if (this.currentLayer != undefined)  {
@@ -256,6 +326,24 @@ define([
 						if (this._hasactivated == false) {
 							//1st call to activate falls into here
 							this.rebuildOptions(); 
+
+							//Instructions Tab
+							if (this.usableRegions[0].intro != undefined && this.introPane == undefined && this.stateRestore == false) {
+								/* CBESSEE */
+
+								// Create Getting started panel
+								this.introPane = new ContentPane({
+									content: this.usableRegions[0].intro.text,
+									style: "width: 475px; position: absolute; opacity: 1; top: 0px; padding: 0px !important; z-index: 950; height: 100%; overflow-y: scroll; background-color: white;"
+								});
+								dom.byId(this.container).appendChild(this.introPane.domNode);
+								this.introLaunched = true;
+								this.exploreRecs = dojoquery(".exploreRecs");
+								on(this.exploreRecs, "click", lang.hitch(this,function(e) {
+									console.log('close click');
+									domStyle.set(this.introPane.domNode, "display", "none");
+								}));
+							}
 						}
 						if ((this._hasactivated == false) && (this.usableRegions.length == 1)) {
 							//1st call to activate does not fall into here (because there is more than one usableRegion)
@@ -265,7 +353,7 @@ define([
 					} else {
 						if (this._hasactivated == false) {
 							//TODO in what case does the code fall in here?
-							//this.rebuildOptions();
+							this.rebuildOptions();
 							this.changeGeography(this.geography, false);
 							this.stateRestore = false;
 						}
@@ -277,14 +365,26 @@ define([
 						this.changeGeography(this.usableRegions[0], !(_noZoom));
 					}
 
+					if(this._hasactivated == false && this.introLaunched == true) {
+						var tabsArr = this.tabpan.getChildren();
+						this.tabpan.selectChild(tabsArr[tabsArr.length - 1]); 
+					}
+
 					//TODO convert function handler to method.
 					this._mapZoomEnd = this.map.on("zoom-end", lang.hitch(this,function(evt){
 						//console.debug('map.zoom-end handler: ', this.map.getZoom());
 						//handle level-of-detail logic here.
 					}));
 
+					
 					//after first call to active, this._hasactivated = true;
 					this._hasactivated = true;
+
+					$('<link>', {
+						rel: 'stylesheet',
+						href: 'plugins/stream_habitat_explorer/print.css',
+						'class': 'app-printing-css'
+					}).appendTo('head');
 				},
 				/** 
 				 * Method: deactivate
@@ -362,9 +462,6 @@ define([
 					if (this.introLayer != undefined) {
 						this.map.removeLayer(this.introLayer)
 					}
-					if (this.introLayerFull != undefined) {
-						this.map.removeLayer(this.introLayerFull)
-					}
 					this.sliders = new Array();
 					if (this.sliderpane != undefined) {
 						this.sliderpane.destroy();
@@ -382,6 +479,11 @@ define([
 					}
 					this._hasactivated = false;
 					this.explorerObject = dojo.eval("[" + explorer + "]")[0];
+
+					if(this.introPane != undefined) {
+						domStyle.set(this.introPane.domNode, "display", "none");
+						this.introPane = undefined;
+					}
 				},
 				/** 
 				 * Method: resize
@@ -409,7 +511,7 @@ define([
 				 * Args:
 				 * 		
 				*/
-        rebuildOptions: function() {
+        		rebuildOptions: function() {
 					console.debug('habitat_explorer; main.js; rebuildOptions()');
 					domConstruct.empty(this.ddNode);
 					$('<h3 style="margin-top: 0px;">New York Streams</h3>').appendTo($(this.ddNode));	
@@ -462,7 +564,7 @@ define([
 				 * Args:
 				 * 		
 				*/
-				zoomToAppExtent: function() {
+				zoomToAppExtent: function(){
 					//!! new internal method for setting extent to framework extent
 					//get the app's initial extent and use for the extent
 					//console.debug('this.app.regionConfig', this.app.regionConfig.initialExtent);
@@ -497,7 +599,10 @@ define([
 					}));
 					this.changeGeography(outreg, false);
 					tabs = this.tabpan.getChildren();
-					this.tabpan.selectChild(tabs[selectedIndex + 1]);
+					this.tabpan.selectChild(tabs[selectedIndex]);
+					if(selectedIndex == 0) {
+						domClass.remove(tabs[0].containerNode.parentNode, 'dijitHidden');
+					}
 				},
 				/** 
 				 * Method: resetTab
@@ -519,11 +624,14 @@ define([
 						if (reg.name == this.geography.name) {
 							outreg = reg;
 						}
-					}));					
+					}));			
 					this.geography.tabs[selectedIndex] = outreg.tabs[selectedIndex]
 					this.changeGeography(this.geography, false);
 					tabs = this.tabpan.getChildren();
-					this.tabpan.selectChild(tabs[selectedIndex + 1]);
+					this.tabpan.selectChild(tabs[selectedIndex]);
+					if(selectedIndex == 0) {
+						domClass.remove(tabs[0].containerNode.parentNode, 'dijitHidden');
+					}
 				},
 				/** 
 				 * Method: resetPanel
@@ -543,10 +651,6 @@ define([
 					if (this.introLayer != undefined) {
 						this.map.removeLayer(this.introLayer)
 						this.introLayer = undefined;
-					}	
-					if (this.introLayerFull != undefined) {
-						this.map.removeLayer(this.introLayerFull)
-						this.introLayerFull = undefined;
 					}	
 					if (this.buttonpane != undefined) {
 						this.buttonpane.destroy();
@@ -612,17 +716,20 @@ define([
 					this.resetPanel();
 					//TODO is below 'if' statement needed? Does code ever drop in there?
 					if (geography.tabs == undefined) {
+						console.log('undefined');
 						geography.tabs = new Array();
 						geography.tabs.push({"name":""});
 						geography.tabs[0].items = geography.items
 					}				
 					if (geography.tabs.length == 1) {
+						console.log('1');
 						this.tabpan = new ContentPane({
 							style:"padding: 8px"
 						});
 						this.tabpan.layout = function() {console.log('layout')};
 						$(this.printButton).show();
 					} else {
+						console.log('else');
 						//explorer.json has no tabtype property for a region. why is this here?
 						if (geography.tabtype == "radio") {
 							this.tabpan = new ContentPane({
@@ -726,35 +833,10 @@ define([
 						
 					}
 					domStyle.set(this.textnode, "display", "none");
-					//Instructions Tab
-					if (geography.intro != undefined) {
-						this.sliderpane = new ContentPane({
-							style: "display: none",
-							title: geography.intro.name,
-							index: -1,
-							"data-index": -1,
-							content: geography.intro.text
-						});	
-						this.sliderpane.titleText = geography.intro.name;//LM hanging on a new sliderpane property for easy access to the tab title name
-						this.tabpan.addChild(this.sliderpane);	
-					}
-					if (this.introLayer != undefined && this.introLayerFull != undefined) {
-						this.introLayer = new ArcGISDynamicMapServiceLayer(geography.intro.layer.url,{
-							useMapImage: true,
-							maxScale: 2000000,
-						});
-						this.introLayerFull = new ArcGISDynamicMapServiceLayer(geography.intro.layer.url, {
-							useMapImage: true,
-							minScale: 2000000
-						})
-						this.introLayer.setVisibleLayers([0]);
-						this.introLayerFull.setVisibleLayers([1]);
-						this.map.addLayer(this.introLayer);
-						this.map.addLayer(this.introLayerFull);
-					}
 					ancillaryon = new Array();
 					//iterate over tabs array from config
 					array.forEach(geography.tabs, lang.hitch(this,function(tab, t){
+
 						if (tab.hoverText == undefined) { tab.hoverText = "" }
 						this.sliderpane = new ContentPane({
 							"data-pane": "ActualTabs",
@@ -978,7 +1060,7 @@ define([
 												cb.set("checked", false);
 											}));
 										}),
-										style: "width:500px;margin-top:10px;margin-bottom:20px"
+										style: "width:425px;margin-top:10px;margin-bottom:20px"
 									}, nslidernode);
 									parser.parse()
 								}
@@ -1003,6 +1085,47 @@ define([
 						this.sliderpane.titleText = geography.combined.name;//LM hanging on a new sliderpane property for easy access to the tab title name
 						this.tabpan.addChild(this.sliderpane);						
 					}
+
+					this.tabpan.startup();
+
+					//below is the only use of dojo/aspect in this file. Should this be dojo/on?
+					aspect.after(this.tabpan, "selectChild", lang.hitch(this,function (e, o) {
+						//called after selecting a new tab in the tab control
+						console.debug('Tab container selectChild event handling....');
+						this.resize();
+						selindex = o[0].index;
+						console.log("index", selindex);
+						if (selindex == geography.tabs.length) {
+							//'Recommendations' tab
+							a = lang.hitch(this,function(){this.doCombined()})
+							setTimeout(a, 500);
+
+							var changedText = 'No';
+							array.forEach(this.sliders, lang.hitch(this,function(slide, i){
+								if(slide.value != 2) {
+									changedText = 'Yes'
+								}
+							}));
+
+							//ga = google analytics, set in index.cshtml view, globally available
+							try{
+								ga('send', 'event', 'Recommendations Selected', 'Weights changed? ' + changedText);
+							} catch(err) {
+								console.error("ga not available", err);
+							}
+						} else {
+							//all other tabs
+							a = lang.hitch(this,function(){this.updateService()})
+							a();
+
+							if(selindex == 0) {
+								tabs = this.tabpan.getChildren();
+								domClass.remove(tabs[0].containerNode.parentNode, 'dijitHidden');
+							}
+						}
+						this.resize();
+					}));
+
 					if (this.isVector == true)  {
 						this.currentLayer = new ArcGISDynamicMapServiceLayer(geography.url);
 					} else {
@@ -1013,50 +1136,6 @@ define([
 						  opacity: 1
 						});
 					}
-
-					//below is the only use of dojo/aspect in this file. Should this be dojo/on?
-					aspect.after(this.tabpan, "selectChild", lang.hitch(this,function (e, o) {
-						//called after selecting a new tab in the tab control
-						console.debug('Tab container selectChild event handling....');
-						this.resize();
-						selindex = o[0].index;
-						if (selindex != -1) {
-							if (this.introLayer != undefined) {
-								  this.map.removeLayer(this.introLayer);
-							}
-							if (this.introLayerFull != undefined) {
-								this.map.removeLayer(this.introLayerFull);
-						}
-							$(this.printButton).show();
-						} else {
-							$(this.printButton).hide();
-							this.introLayer = new ArcGISDynamicMapServiceLayer(geography.intro.layer.url,{
-								useMapImage: true,
-								maxScale: 2000000
-							});
-							this.introLayer.setVisibleLayers([0])
-							this.map.addLayer(this.introLayer);
-
-							this.introLayerFull = new ArcGISDynamicMapServiceLayer(geography.intro.layer.url,{
-								useMapImage: true,
-								minScale: 2000000
-							});
-							this.introLayerFull.setVisibleLayers([1])
-							this.map.addLayer(this.introLayerFull);
-						}
-						if (selindex == geography.tabs.length) {
-							//'Recommendations' tab
-							a = lang.hitch(this,function(){this.doCombined()})
-							setTimeout(a, 500);
-						} else {
-							//all other tabs
-							a = lang.hitch(this,function(){this.updateService()})
-							a();
-						}
-						this.resize();
-					}));
-					this.tabpan.startup();
-
 					dojo.connect(this.currentLayer, "onLoad", lang.hitch(this,function(e){
 						this.updateService(zoomto);
 					}));
@@ -1086,9 +1165,10 @@ define([
 
 					//settting the selected tab via 'state' is near the bottom here because the 'selectChild' evetn hanlding needs to have this.currentLayer populated.
 					if(this.stateTabIndex != null){
+						console.log('state');
 						try{
 							var tabsArr = this.tabpan.getChildren();
-							this.tabpan.selectChild(tabsArr[this.stateTabIndex + 1]); 
+							this.tabpan.selectChild(tabsArr[this.stateTabIndex]); 
 						} catch(err){
 							//most likely reason to fall in here would be an out-of-bounds index for the tabsarr index
 							console.error('Unable to set current tab: ', err);
@@ -1182,7 +1262,7 @@ define([
 				 * 		tabIndex {integer} - The index number of a Tab in the Tab Panel
 				 * 		
 				*/
-			  getFormula: function(tabIndex) {
+			   	getFormula: function(tabIndex) {
 					console.debug('habitat_explorer; main.js; getFormula()');
 					this.BandFormula = new Array();
 					this.GroupTotals = new Array();
@@ -1354,9 +1434,10 @@ define([
 						this.map.resize();
 					} else {
 						//Not Vector...
-						rfout = this.combiner.combineFunction(this.formulas, this.geography, this.Tformulas, rfuncs);
-						this.legendContainer.innerHTML = '<div id="mExplorerLegend' + "_" + this.map.id + '">' + rfout.legendHTML + "</div>"
-						this.currentLayer.setRenderingRule(rfout.renderRule);
+						this.rfout = this.combiner.combineFunction(this.formulas, this.geography, this.Tformulas, rfuncs);
+
+						this.legendContainer.innerHTML = '<div id="mExplorerLegend' + "_" + this.map.id + '">' + this.rfout.legendHTML + "</div>"
+						this.currentLayer.setRenderingRule(this.rfout.renderRule);
 					}
 				},
 				/** 
@@ -1512,26 +1593,26 @@ define([
 					//For both FOREST and STREAMS
 					innerSyms = "";
 					array.forEach(lcolorRamp, lang.hitch(this,function(cColor, i){
-						innerSyms = innerSyms + '<rect x="0" y ="'+ (i * 30) + '" width="30" height="20" style="fill:rgb('+ cColor[legIndexes[0]] + "," + cColor[legIndexes[1]] + "," + cColor[legIndexes[2]] + ');stroke-width:0;stroke:rgb(0,0,0)" />'
+						innerSyms = innerSyms + '<div style="position: absolute; left: 0; color-adjust: exact; -webkit-print-color-adjust: exact; print-color-adjust: exact; width: 20px; height: 14px; border: 1px solid black; top: '+ (i * 22) + 'px; background-color:rgb('+ cColor[legIndexes[0]] + "," + cColor[legIndexes[1]] + "," + cColor[legIndexes[2]] + ');" ></div>'
 					}));
 					if ( this.geography.outputLabels == undefined) {
 						this.geography.outputLabels = [{text:"Low", "percent": "0"},{text:"Medium", "percent": "50"},{text:"High", "percent": "100"}];
 					}	
-					lh = ((lcolorRamp.length) * 30) + 10;
-					maxy = ((lcolorRamp.length) * 30) - 30;
+					lh = ((lcolorRamp.length) * 21) + 10;
+					maxy = ((lcolorRamp.length) * 21) - 21;
 					labs = "";
 					array.forEach(this.geography.outputLabels, lang.hitch(this,function(lab, i){
-						labs = labs + '<text x="35" y="' +((maxy * (lab.percent / 100))  + 15) + '" fill="black">' + lab.text + '</text>'
+						labs = labs + '<div style="color: black; display: inline-block; left: 25px; top: ' +((maxy * (lab.percent / 100))) + 'px; position: absolute">' + lab.text + '</div>'
 					}));
 					this.legendContainer.innerHTML = '<div style="margin-bottom:7px" id="mExplorerLegend' + "_" + this.map.id + '">' + this.toolbarName + regfixname + ctabname + '</div>'
-						+ '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="500px" height="' + lh + '">'
-						+ innerSyms + labs;
+						+ '<div style="position: relative;" width="500px" height="' + lh + '">'
+						+ innerSyms + labs + "</div>";
 					if (orgselectedIndex > -1) {
 						//For tabs other than the Instructions tab
 						this.currentLayer.setVisibility(true);
 						this.legendContainer.innerHTML = '<div style="margin-bottom:7px" id="mExplorerLegend' + "_" + this.map.id + '">' + this.toolbarName + regfixname + ctabname + '</div>'
-						+ '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="500px" height="' + lh + '">'
-						+ innerSyms + labs
+						+ '<div style="position: relative; width: 500px; height: ' + lh + 'px;" >'
+						+ innerSyms + labs + "</div>";
 					} else {
 						//For the Instructions tab
 						this.currentLayer.setVisibility(false);
@@ -1539,35 +1620,6 @@ define([
 					}
 					tabs = this.tabpan.getChildren();
 					selectedIndex = this.tabpan.selectedChildWidget.index;
-					//Instructions tab is at index -1
-					if (selectedIndex == -1) {
-						//toggle visibility of tab[0] main content
-						domClass.remove(dojoquery(tabs[0].containerNode).parent()[0], "dijitHidden");
-						domClass.add(dojoquery(tabs[0].containerNode).parent()[0], "dijitVisible");
-						//this.introLayer is undefined at this point on first load.
-						if (this.introLayer == undefined) {
-							this.introLayer = new ArcGISDynamicMapServiceLayer(this.geography.intro.layer.url,{
-								useMapImage: true,
-								maxScale: 2000000
-							});
-							//value of this.geography.intro.layer.show, as currently set in config, is [118]
-							this.introLayer.setVisibleLayers([0]);
-							this.map.addLayer(this.introLayer);	
-						}
-						if (this.introLayerFull == undefined) {
-							this.introLayerFull = new ArcGISDynamicMapServiceLayer(this.geography.intro.layer.url,{
-								useMapImage: true,
-								minScale: 2000000
-							});
-							//value of this.geography.intro.layer.show, as currently set in config, is [118]
-							this.introLayerFull.setVisibleLayers([1]);
-							this.map.addLayer(this.introLayerFull);	
-						}
-					} else {
-						//toggle visibility of tab[0] main content
-						domClass.remove(dojoquery(tabs[0].containerNode).parent()[0], "dijitVisible");
-						domClass.add(dojoquery(tabs[0].containerNode).parent()[0], "dijitHidden");					
-					}
 				},
 				/** 
 				 * TODO deprecated LM 3/15/18
@@ -1713,11 +1765,14 @@ define([
 				*/
 			   	identify: function(point, screenPoint, processResults) {
 					console.debug('habitat_explorer; main.js; identify()');
+
 					if(this.tabpan.selectedChildWidget.titleText == "Instructions"){
 						processResults("Note: Select the Recommendations tab to click on map for further details or other tabs to explore individual components.");
 						return;
 					}
 					if (this.currentLayer && this.currentLayer.url.includes("ImageServer") == true) {
+						expandScript = 'function toggleVarTable() {var expand = document.getElementById("toggle-table");var table = document.getElementById("var-table");if(expand.innerHTML == "More Details") {expand.innerHTML = "Less Details";table.style.display = "block";} else {expand.innerHTML = "More Details";table.style.display = "none";}} toggleVarTable(); return false;';
+
 						//FOREST processing
 						idTask = new esri.tasks.ImageServiceIdentifyTask(this.geography.url);
 						identifyParams = new ImageServiceIdentifyParameters();
@@ -1730,7 +1785,7 @@ define([
 								if(this.tabpan.selectedChildWidget.titleText != "Instructions"){
 									if(this.tabpan.selectedChildWidget.titleText != "Recommendations"){
 										//If on a tab with slider options, process the specific function and slider values from this tab.
-										idtable = '<br><table border="1"><tr><th width="50%"><center>Variable</center></th><th width="25%"><center>Value</center></th><th width="25%"><center>Weight</center></th></tr>';
+										idtable = `<br><div id="toggle-table" onclick='` + expandScript + `' style="cursor: pointer; color: blue; text-decoration: underline;">More Details</div><br/><div id="var-table" style="display:none"><table border="1"><tr><th width="50%"><center>Variable</center></th><th width="25%"><center>Value</center></th><th width="25%"><center>Weight</center></th></tr>`;
 										identifyValues = dojo.eval("[" + identifyResults.value + "]");
 										replacedFormula = this.formula;
 										varFormula = this.formula;
@@ -1745,11 +1800,11 @@ define([
 												}
 											}));
 										}));
-										idtable = idtable + '</table>';
-										processResults("<br> Value at Mouse Click: <b>" + dojo.eval(replacedFormula).toFixed(3).replace(".000", '') + "</b><br>" + idtable + "Formula: <br>" + this.geography.BandFormulaText);	
+										idtable = idtable + '</table></div>';
+										processResults("<br> " + this.tabpan.selectedChildWidget.titleText + " Score = <b>" + dojo.eval(replacedFormula).toFixed(3).replace(".000", '') + "</b><br>" + idtable + "Formula: <br>" + this.geography.BandFormulaText);	
 									} else {
 										//user is on the Recommendations tab, loop over all sliders from all tabs.
-										idtable = '<br><table border="1"><tr><th width="50%"><center>Variable</center></th><th width="25%"><center>Value</center></th><th width="25%"><center>Weight</center></th></tr>';
+										idtable = `<br><div id="toggle-table" onclick='` + expandScript + `' style="cursor: pointer; color: blue; text-decoration: underline;">More Details</div><br/><div id="var-table" style="display:none"><table border="1"><tr><th width="50%"><center>Variable</center></th><th width="25%"><center>Value</center></th><th width="25%"><center>Weight</center></th></tr>`;
 										identifyValues = dojo.eval("[" + identifyResults.value + "]");
 										combinedFormulas = '';
 										array.forEach(this.formulas, lang.hitch(this,function(formula,idx){
@@ -1770,8 +1825,20 @@ define([
 												}
 											}));
 										}));
-										idtable = idtable + '</table>';
-										processResults("<br> Value at Mouse Click: <b>" + dojo.eval(combinedFormulas).toFixed(3).replace(".000", '') + "</b><br>" + idtable);
+										idtable = idtable + '</table></div>';
+										idTask2 = new esri.tasks.ImageServiceIdentifyTask(this.geography.url);
+										identifyParams2 = new ImageServiceIdentifyParameters();
+										identifyParams2.returnGeometry = false;
+										identifyParams2.renderingRule = this.rfout.renderRule;
+										identifyParams2.geometry = point;
+										//identifyParams.renderingRule = this.renderingRule;					
+										idTask2.execute(identifyParams2, lang.hitch(this,function(identifyResults) {
+											var recommendation = this.labelMap.find((item) => {
+												return item.value == identifyResults.value;
+											});
+											console.log(combinedFormulas);
+											processResults("<div style='max-height: 300px; overflow-y: scroll;'><br> Final Recommendation Score = <b>" + dojo.eval(combinedFormulas).toFixed(3).replace(".000", '') + " " + recommendation.label + "</b><br>" + idtable + "</div>");
+										}));
 									}
 								} else {
 									//user is on the Instructions tab
@@ -1928,6 +1995,8 @@ define([
 						}));
 					}));
 					leg = this.legendContainer.innerHTML;
+					console.log('working');
+					console.log("LEG HTML", jquery.parseHTMl(leg));
 					a = domGeom.position(dojoquery('#mExplorerLegend' + "_" + this.map.id)[0])
 					$printArea.append("<div id='legendprint' >" + leg + "</div>");
 					$printArea.append("<div id='formulaprint'>" + "Formula for Map: <br><br>" + this.geography.BandFormulaText + this.geography.printText + "</div>");
